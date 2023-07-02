@@ -1,7 +1,11 @@
+// Each material is 106x106 pixels
 const MATERIAL_W = 106;
 const MATERIAL_H = 106;
+// There are 5x5 materials: 25 total.
 const MATERIAL_W_COUNT = 5;
 const MATERIAL_H_COUNT = 5;
+// Key: image width
+// Value: cropped dimensions that only shows the 5x5 grid of materials
 const MATERIALS_FRAME = {
   1280: {
       SX: 83,                               // TOP LEFT
@@ -10,21 +14,25 @@ const MATERIALS_FRAME = {
       SH: MATERIAL_H * MATERIAL_H_COUNT,    // HEIGHT
   },
 };
+// Inside each 106x106 pixel square, there should be an additional 23px of
+// padding to further isolate the material icon.
 const MATERIAL_W_PADDING = 23;
 const MATERIAL_H_PADDING = 23;
+// The total computed height and width of the material icon.
 const MATERIAL_W_CROPPED = MATERIAL_W - MATERIAL_W_PADDING * 2;
 const MATERIAL_H_CROPPED = MATERIAL_H - MATERIAL_H_PADDING * 2;
-const PIXEL_R = 0;
-const PIXEL_G = 1;
-const PIXEL_B = 2;
-const PIXEL_A = 3;
-const PIXEL_WIDTH = 4;
+// Each pixel consists of 4 total values modeled in an array of length 4.
+const PIXEL_WIDTH = 4;  // RGBA
 
 const itemLookups = localStorage.getItem('itemLookups', []);
 
-let trainingImg;
 
-
+/*
+ * Getting a pixel from ImageData is a little messy, so here is a helper
+ * function to make things a little easier.
+ *
+ * https://developer.mozilla.org/en-US/docs/Web/API/ImageData/ImageData
+ */
 ImageData.prototype.getPixel = function (x, y) {
   // IMPORTANT: there was a bug in the code. Swapping these values worked.
   const i = (y * PIXEL_WIDTH) + (x * this.width * PIXEL_WIDTH);
@@ -36,29 +44,45 @@ ImageData.prototype.getPixel = function (x, y) {
   ];
 }
 
+/*
+ * Takes image and generates a lookup matrix for each material in the image.
+ *
+ * See steps:
+ *   - 0.A: Load the image (pt1)
+ *   - 0.B: Load the image (pt2)
+ *   - 1: Make a canvas so we can process the training image
+ *   - 2: Crop the image into just the materials section
+ *   - 3: Go through our 5x5 grid and isolate each material (25 total)
+ *   - TODO: Transform the image into a lookup matrix
+ *   - TEMPORARY DEBUG: Display image
+ */
+function generateLookups(imgSrc) {
 
-function generateLookups() {
-
+    // 0.A: Load the image
     const img = new Image();
     img.onload = function() {
-        // Make a canvas so we can process the image
+
+        ///////////////////////////////////////////////////////////////////////
+        // 1: Make a canvas so we can process the training image
         const canvas     = document.createElement('canvas');
         canvas.height  = img.height;
         canvas.width   = img.width;
         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        // Crop the image into just the materials section
+
+        ///////////////////////////////////////////////////////////////////////
+        // 2: Crop the image into just the materials section
         const trim = MATERIALS_FRAME[img.width];
         if (!trim) {
             throw `Invalid image dimensions ${img.width}x${img.height}`;
         }
-
         const pixels = (
             canvas
             .getContext('2d')
             .getImageData(trim.SX, trim.SY, trim.SW, trim.SH)
         );
 
-        // This goes through our 5x5 grid and isolates each material (25 total)
+        ///////////////////////////////////////////////////////////////////////
+        // 3: Go through our 5x5 grid and isolate each material (25 total)
         for(let i = 0; i < 25; i++) {
           // New image that will display the single material
           const mat = new ImageData(MATERIAL_W_CROPPED, MATERIAL_H_CROPPED);
@@ -87,22 +111,22 @@ function generateLookups() {
           displayCanvas.getContext('2d').putImageData(mat, 0, 0);
         }
 
-        // TODO
-        console.log('onload')
-        trainingImg = pixels;
-        console.log(pixels);
+        ///////////////////////////////////////////////////////////////////////
+        // TODO: Transform the image into a lookup matrix
 
-        // Display image
+        ///////////////////////////////////////////////////////////////////////
+        // TEMPORARY DEBUG: Display image
         const displayCanvas = document.getElementById('training');
         // repaint the image on the canvas
         displayCanvas.height = trim.SH;
         displayCanvas.width = trim.SW;
-        console.log(displayCanvas)
         displayCanvas.getContext('2d').putImageData(pixels, 0, 0);
 
     };
-    img.src = "./media/answers/img.JPG";
-    console.log('running');
+
+    // 0.B: Load the image
+    img.src = imgSrc;
 }
-console.log('running');
-generateLookups();
+
+// "Run main"
+generateLookups("./media/answers/img.JPG");

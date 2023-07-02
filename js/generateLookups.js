@@ -23,10 +23,12 @@ const MATERIAL_W_CROPPED = MATERIAL_W - MATERIAL_W_PADDING * 2;
 const MATERIAL_H_CROPPED = MATERIAL_H - MATERIAL_H_PADDING * 2;
 // Each pixel consists of 4 total values modeled in an array of length 4.
 const PIXEL_WIDTH = 4;  // RGBA
-
-
-// TODO: This is where the lookup matrix dumps should go.
-const itemLookups = localStorage.getItem('itemLookups', []);
+// The matrix lookup needs a size
+const MATRIX_WIDTH = 4;
+const MATRIX_HEIGHT = 4;
+// Any score less than this will qualify as a match between a source image
+// material and a matrix representation of a material.
+const SCORE_CUTOFF = 100;
 
 
 /*
@@ -46,6 +48,48 @@ ImageData.prototype.getPixel = function (x, y) {
   ];
 }
 
+
+/*
+ * Similar to getting a pixel from ImageData, this sets a pixel to ImageData
+ *
+ * https://developer.mozilla.org/en-US/docs/Web/API/ImageData/ImageData
+ */
+ImageData.prototype.setPixel = function (x, y, pix) {
+  // IMPORTANT: there was a bug in the code. Swapping these values worked.
+  const i = (y * PIXEL_WIDTH) + (x * this.width * PIXEL_WIDTH);
+  this.data[i + 0] = pix[0];
+  this.data[i + 1] = pix[1];
+  this.data[i + 2] = pix[2];
+  this.data[i + 3] = pix[3];
+}
+
+/*
+ * Give this function a matrix representation of a material and determine if
+ * there are any potential matches.
+ *
+ * NOTE: Ideally there is exactly 1 match; however, there could be multiple or
+ *       none.
+ */
+function getMatches(inputMatrix) {
+  const scoresLookup = JSON.parse(JSON.stringify(MATRIX_LOOKUP));
+  for(const [mat, matMatrix] of Object.entries(scoresLookup)) {
+    let score = 0;
+    for(let y = 0; y < inputMatrix.length; y++) {
+      for(let x = 0; x < inputMatrix[y].length; x++) {
+        score += (
+          Math.abs(inputMatrix[y][x][0] - matMatrix[y][x][0]) +
+          Math.abs(inputMatrix[y][x][1] - matMatrix[y][x][1]) +
+          Math.abs(inputMatrix[y][x][2] - matMatrix[y][x][2]) +
+          Math.abs(inputMatrix[y][x][3] - matMatrix[y][x][3])
+        );
+      }
+    }
+    scoresLookup[mat] = score;
+  }
+  return Object.entries(scoresLookup).filter(arr => arr[1] < SCORE_CUTOFF);
+}
+
+
 /*
  * Takes image and generates a lookup matrix for each material in the image.
  *
@@ -54,9 +98,11 @@ ImageData.prototype.getPixel = function (x, y) {
  *   - 0.B: Load the image (pt2)
  *   - 1: Make a canvas so we can process the training image
  *   - 2: Crop the image into just the materials section
- *   - 3: Go through our 5x5 grid and isolate each material (25 total)
- *   - TODO: Transform the image into a lookup matrix
- *   - TEMPORARY DEBUG: Display image
+ *   - 3: Go through the 5x5 grid and isolate each mat (material, 25 total)
+ *   - 4: Transform the image into a lookup matrix
+ *   - 5: Visualize lookup matrix
+ *   - 6: See if there is already a match
+ *   - 7: Display results and log the lookup matrix
  */
 function generateLookups(imgSrc) {
 
@@ -66,9 +112,9 @@ function generateLookups(imgSrc) {
 
         ///////////////////////////////////////////////////////////////////////
         // 1: Make a canvas so we can process the training image
-        const canvas     = document.createElement('canvas');
-        canvas.height  = img.height;
-        canvas.width   = img.width;
+        const canvas = document.createElement('canvas');
+        canvas.height = img.height;
+        canvas.width = img.width;
         canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
 
         ///////////////////////////////////////////////////////////////////////
@@ -83,10 +129,11 @@ function generateLookups(imgSrc) {
             .getImageData(trim.SX, trim.SY, trim.SW, trim.SH)
         );
 
-        ///////////////////////////////////////////////////////////////////////
-        // 3: Go through our 5x5 grid and isolate each material (25 total)
         for(let i = 0; i < 25; i++) {
-          // New image that will display the single material
+
+          /////////////////////////////////////////////////////////////////////
+          // 3: Go through the 5x5 grid and isolate each mat
+          //    (material, 25 total)
           const mat = new ImageData(MATERIAL_W_CROPPED, MATERIAL_H_CROPPED);
           // Translate "i" to a material on the grid, going from l->r u->d
           const [x, y] = [i % 5, Math.floor(i / 5)];
@@ -106,21 +153,90 @@ function generateLookups(imgSrc) {
             }
           }
 
-          // Paint the cropped image on the canvas
-          const displayCanvas = document.getElementById(`training${i}`);
-          displayCanvas.height = MATERIAL_W_CROPPED;
-          displayCanvas.width = MATERIAL_H_CROPPED;
-          displayCanvas.getContext('2d').putImageData(mat, 0, 0);
+          /////////////////////////////////////////////////////////////////////
+          // 4: Transform the image into a lookup matrix
+          const subImgPixWidth = Math.floor(MATERIAL_W_CROPPED / MATRIX_WIDTH);
+          const subImgPixHeight = Math.floor(MATERIAL_H_CROPPED / MATRIX_HEIGHT);
+          const generatedItemLookup = [];
+
+          // Go through and initialize each matrix lookup (4x4)
+          for(let k = 0; k < MATRIX_HEIGHT; k++) {
+            if (!generatedItemLookup[k]) generatedItemLookup[k] = [];
+            for(let j = 0; j < MATRIX_WIDTH; j++) {
+              generatedItemLookup[k][j] = [0, 0, 0, 0];  // PIXEL_WIDTH
+
+              // Now go through each matrix portion of the mat image.
+              const xDelta = subImgPixWidth * j;
+              const yDelta = subImgPixHeight * k;
+              let count = 0;
+              for(let a = 0; a < subImgPixWidth; a++) {
+                for(let b = 0; b < subImgPixHeight; b++) {
+                  const tPix = mat.getPixel(xDelta + a, yDelta + b);
+                  // PIXEL_WIDTH
+                  generatedItemLookup[k][j][0] += tPix[0];
+                  generatedItemLookup[k][j][1] += tPix[1];
+                  generatedItemLookup[k][j][2] += tPix[2];
+                  generatedItemLookup[k][j][3] += tPix[3];
+                  count += 1;
+                }
+              }
+              generatedItemLookup[k][j][0] /= count;
+              generatedItemLookup[k][j][1] /= count;
+              generatedItemLookup[k][j][2] /= count;
+              generatedItemLookup[k][j][3] /= count;
+            }
+          }
+
+          /////////////////////////////////////////////////////////////////////
+          // 5: Visualize lookup matrix
+          const matrix = new ImageData(MATERIAL_W_CROPPED, MATERIAL_H_CROPPED);
+          for(let j = 0; j < MATERIAL_W_CROPPED; j++) {
+            for(let k = 0; k < MATERIAL_H_CROPPED; k++) {
+              const pixel = matrix.setPixel(j, k, generatedItemLookup[2][2]);
+            }
+          }
+
+          /////////////////////////////////////////////////////////////////////
+          // 6: See if there is already a match
+          const matches = getMatches(generatedItemLookup);
+
+          /////////////////////////////////////////////////////////////////////
+          // 7: Display results and log the lookup matrix
+          const materialCanvas = document.createElement('canvas');
+          materialCanvas.height = MATERIAL_W_CROPPED;
+          materialCanvas.width = MATERIAL_H_CROPPED;
+          materialCanvas.getContext('2d').putImageData(mat, 0, 0);
+
+          const matrixCanvas = document.createElement('canvas');
+          matrixCanvas.height = MATERIAL_W_CROPPED;
+          matrixCanvas.width = MATERIAL_H_CROPPED;
+          matrixCanvas.getContext('2d').putImageData(matrix, 0, 0);
+
+          const description = document.createElement('span');
+          if (matches.length === 0) {
+            description.innerHTML = '<i>Unknown</i>';
+          } else if (matches.length === 1) {
+            description.innerHTML = matches[0][0];
+          } else {
+            description.innerHTML = '<span style="color: red;">Multiple</span>';
+          }
+
+          const trainingContainer = document.getElementById('training');
+          const div = document.createElement('div');
+          div.appendChild(materialCanvas);
+          div.appendChild(matrixCanvas);
+          div.appendChild(description);
+          trainingContainer.appendChild(div);
+          console.log(div);
+          console.log(JSON.stringify(generatedItemLookup));
         }
-
-        ///////////////////////////////////////////////////////////////////////
-        // TODO: Transform the image into a lookup matrix
-
     };
 
     // 0.B: Load the image
     img.src = imgSrc;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
 // "Run main"
 generateLookups("./media/answers/img.JPG");

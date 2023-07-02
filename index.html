@@ -1,0 +1,111 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Upload screenshots to see what shrines you have yet to find and complete">
+    <meta name="author" content="Joshua Schultheiss">
+
+    <title>cookbook</title>
+
+    <!-- Spectre.css ~ The lightweight, responsive and modern CSS framework -->
+    <!--                                                                    -->
+    <!--               https://picturepan2.github.io/spectre/               -->
+    <!--                                                                    -->
+    <link rel="stylesheet" href="packages/spectre/spectre.min.css">
+    <link rel="stylesheet" href="packages/spectre/spectre-icons.min.css">
+
+    <!-- custom styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<!-- min width supported ~ 320px -->
+
+<body>
+
+    <p id="zoom" class="hide">Too small? Pinch to zoom.</p>
+    <a href="http://schultheiss.io" id="smiley" class="hide">😁</a>
+    <a href="https://github.com/0x213F/shrine-finder" id="source" class="hide">👨🏻‍🔬</a>
+
+
+    <!-- TODO change "main" to a better name -->
+    <div id="setup" class="mainForm center card ">
+
+        <div class="card-header">
+            <h2 style="text-align: center; font-weight: bold;">Hylean Cookbook</h2>
+            <h6 class="card-subtitle">Upload screenshots your items to see what recipes you can cook up.</h6>
+            <h6 class="card-subtitle">This tool supports both docked mode (1080p) and tablet mode (720p).</h6>
+            <h6 class="card-subtitle">Are you just here for some fun? <a href="#" id="demo">Try the demo</a>.</h6>
+        </div>
+
+        <canvas id="training0"></canvas>
+        <canvas id="training1"></canvas>
+        <canvas id="training2"></canvas>
+        <canvas id="training3"></canvas>
+        <canvas id="training4"></canvas>
+        <canvas id="training5"></canvas>
+        <canvas id="training6"></canvas>
+        <canvas id="training7"></canvas>
+        <canvas id="training8"></canvas>
+        <canvas id="training9"></canvas>
+        <canvas id="training10"></canvas>
+        <canvas id="training11"></canvas>
+        <canvas id="training12"></canvas>
+        <canvas id="training13"></canvas>
+        <canvas id="training14"></canvas>
+        <canvas id="training15"></canvas>
+        <canvas id="training16"></canvas>
+        <canvas id="training17"></canvas>
+        <canvas id="training18"></canvas>
+        <canvas id="training19"></canvas>
+        <canvas id="training20"></canvas>
+        <canvas id="training21"></canvas>
+        <canvas id="training22"></canvas>
+        <canvas id="training23"></canvas>
+        <canvas id="training24"></canvas>
+
+        <div class="card-header">
+            <input id="uploadimg1" type="file" class="hide"/>
+            <button id="uploadimg1ptr" class="btn btn-primary float-right"><i id="uploadimgicon1" class="icon icon-upload"></i></button>
+            <div class="card-title">Upload First Image</div>
+        </div>
+
+        <div class="card-header">
+            <h6 class="card-subtitle">Open your map and put your cursor in the upper-left corner of the screen, then take a screenshot. It should look just like <a href="#" id="showeximg1">this</a>.</h6>
+        </div>
+
+        <div id="eximg1" class="card-image hide">
+            <img src="./media/tests/test1.png" class="img-responsive" />
+        </div>
+
+        <div class="card-header">
+            <input id="uploadimg2" type="file" class="hide"/>
+            <button id="uploadimg2ptr" class="btn btn-primary float-right"><i id="uploadimgicon2" class="icon icon-upload"></i></button>
+            <div class="card-title">Upload Second Image</div>
+        </div>
+
+        <div class="card-header">
+            <h6 class="card-subtitle">Same thing, but now the bottom-left corner of the screen, then take a screenshot. It should look just like <a href="#" id="showeximg2">this</a>.</h6>
+        </div>
+
+        <div id="eximg2" class="card-image hide">
+            <img src="./media/tests/test2.png" class="img-responsive" />
+        </div>
+
+        <div class="card-body">
+            <button id="generate" class="btn btn-primary disabled" style="width: 100%;">🥘</button>
+        </div>
+
+    </div>
+
+    <canvas id="map1" class="hide" style="margin-top: -10px;"></canvas>
+    <canvas id="map2" class="hide" style="margin-bottom: 10px;"></canvas>
+
+    <script src="js/generateLookups.js"></script>
+    <script src="js/constants.js"></script>
+    <script src="js/functions.js"></script>
+    <script src="js/listeners.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

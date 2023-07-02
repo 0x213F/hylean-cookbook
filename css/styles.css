@@ -4,20 +4,6 @@
     margin: 0px;
 }
 
-#smiley {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    text-decoration: none;
-}
-
-#source {
-    position: fixed;
-    bottom: 30px;
-    left: 30px;
-    text-decoration: none;
-}
-
 .center {
     display: block;
     margin-left: auto;
@@ -36,10 +22,4 @@
 .mainForm {
     max-width: 300px;
     margin-top: 10px;
-}
-
-.photo {
-    border-left: 10px;      /* this seems like a little bit of a hack */
-    border-right: 10px;
-    border-bottom: 10px;
 }

@@ -24,6 +24,8 @@ const MATERIAL_H_CROPPED = MATERIAL_H - MATERIAL_H_PADDING * 2;
 // Each pixel consists of 4 total values modeled in an array of length 4.
 const PIXEL_WIDTH = 4;  // RGBA
 
+
+// TODO: This is where the lookup matrix dumps should go.
 const itemLookups = localStorage.getItem('itemLookups', []);
 
 
@@ -113,14 +115,6 @@ function generateLookups(imgSrc) {
 
         ///////////////////////////////////////////////////////////////////////
         // TODO: Transform the image into a lookup matrix
-
-        ///////////////////////////////////////////////////////////////////////
-        // TEMPORARY DEBUG: Display image
-        const displayCanvas = document.getElementById('training');
-        // repaint the image on the canvas
-        displayCanvas.height = trim.SH;
-        displayCanvas.width = trim.SW;
-        displayCanvas.getContext('2d').putImageData(pixels, 0, 0);
 
     };
 

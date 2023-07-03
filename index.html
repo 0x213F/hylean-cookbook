@@ -34,11 +34,18 @@
             <h6 class="card-subtitle">This tool supports the original Switch in a docked configuration.</h6>
         </div>
 
+        <div class="card-header">
+            <input id="uploadImg" type="file" class="hide"/>
+            <button id="uploadImgPtr" class="btn btn-primary float-right"><i id="uploadImgIcon" class="icon icon-upload"></i></button>
+            <div class="card-title">Upload Image</div>
+        </div>
+
         <div id="training" style="display: flex; flex-direction: column; align-items: center;"></div>
 
     </div>
 
     <script src="js/matrixLookup.js"></script>
-    <script src="js/generateLookups.js"></script>
+    <script src="js/processImage.js"></script>
+    <script src="js/listeners.js"></script>
 </body>
 </html>
